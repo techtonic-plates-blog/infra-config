@@ -20,7 +20,7 @@ RUN cd /tmp && \
 
 # Add project files
 WORKDIR /app
-COPY . .
+ADD . .
 
 # Make sure the init script is executable
 RUN chmod +x /app/init-terraform.sh
