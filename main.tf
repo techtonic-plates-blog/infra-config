@@ -41,3 +41,21 @@ resource "kafka-connect_connector" "posts-service-users-sink" {
     "delete.enabled"       = "true"
   }
 }
+
+resource "kafka-connect_connector" "posts-service-posts-source" {
+  name   = "posts-service-posts-source"
+  config = {
+    "name"             = "posts-service-posts-source"
+    "connector.class"   = "io.debezium.connector.postgresql.PostgresConnector"
+    "database.hostname" = var.postgres_host
+    "database.port"     = "5432"
+    "database.user"     = var.debezium_user
+    "database.password" = var.debezium_pass
+    "database.dbname"   = "posts_service"
+    "topic.prefix"      = "posts"
+    "plugin.name"       = "pgoutput"
+    "slot.name"         = "debezium_posts_slot"
+    "publication.name"  = "debezium_posts_pub"
+    "table.include.list"= "public.posts"
+  }
+}
