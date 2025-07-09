@@ -6,8 +6,6 @@
 - `variables.tf`: Input variables
 - `outputs.tf`: Outputs
 - `providers.tf`: Provider configuration
-- `modules/`: Reusable Terraform modules
-- `data/`: Source/data files (moved from `sources/`)
 
 ## Usage
 
