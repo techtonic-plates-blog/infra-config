@@ -1,9 +1,6 @@
 # Database Initialization Dockerfile
 FROM hashicorp/terraform:1.7
 
-# Install PostgreSQL client for testing connections
-RUN apk add --no-cache postgresql-client
-
 # Set working directory
 WORKDIR /terraform
 
@@ -31,11 +28,6 @@ RUN echo '#!/bin/sh' > /entrypoint.sh && \
     echo '    fi' >> /entrypoint.sh && \
     echo 'done' >> /entrypoint.sh && \
     echo 'echo "✅ Environment variables validated"' >> /entrypoint.sh && \
-    echo '' >> /entrypoint.sh && \
-    echo '# Test PostgreSQL connection' >> /entrypoint.sh && \
-    echo 'echo "🔍 Testing PostgreSQL connection..."' >> /entrypoint.sh && \
-    echo 'PGPASSWORD=$TF_VAR_postgres_password psql -h $TF_VAR_postgres_host -U postgres -d postgres -c "SELECT version();" > /dev/null' >> /entrypoint.sh && \
-    echo 'echo "✅ PostgreSQL connection successful"' >> /entrypoint.sh && \
     echo '' >> /entrypoint.sh && \
     echo '# Initialize Terraform with remote state if MinIO vars are set' >> /entrypoint.sh && \
     echo 'if [ -n "$TF_VAR_minio_url" ] && [ -n "$TF_VAR_minio_access_key" ] && [ -n "$TF_VAR_minio_secret_key" ]; then' >> /entrypoint.sh && \

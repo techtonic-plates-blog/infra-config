@@ -1,9 +1,6 @@
 # Kafka Connectors Dockerfile
 FROM hashicorp/terraform:1.7
 
-# Install curl for testing Kafka Connect API
-RUN apk add --no-cache curl jq
-
 # Set working directory
 WORKDIR /terraform
 
@@ -31,26 +28,6 @@ RUN echo '#!/bin/sh' > /entrypoint.sh && \
     echo '    fi' >> /entrypoint.sh && \
     echo 'done' >> /entrypoint.sh && \
     echo 'echo "✅ Environment variables validated"' >> /entrypoint.sh && \
-    echo '' >> /entrypoint.sh && \
-    echo '# Test Kafka Connect API' >> /entrypoint.sh && \
-    echo 'echo "🔍 Testing Kafka Connect API..."' >> /entrypoint.sh && \
-    echo 'max_retries=30' >> /entrypoint.sh && \
-    echo 'retry_count=0' >> /entrypoint.sh && \
-    echo 'while [ $retry_count -lt $max_retries ]; do' >> /entrypoint.sh && \
-    echo '    if curl -s -f http://kafka-connect:8083/ > /dev/null 2>&1; then' >> /entrypoint.sh && \
-    echo '        echo "✅ Kafka Connect API is accessible"' >> /entrypoint.sh && \
-    echo '        break' >> /entrypoint.sh && \
-    echo '    else' >> /entrypoint.sh && \
-    echo '        echo "⏳ Waiting for Kafka Connect API... (attempt $((retry_count + 1))/$max_retries)"' >> /entrypoint.sh && \
-    echo '        sleep 10' >> /entrypoint.sh && \
-    echo '        retry_count=$((retry_count + 1))' >> /entrypoint.sh && \
-    echo '    fi' >> /entrypoint.sh && \
-    echo 'done' >> /entrypoint.sh && \
-    echo '' >> /entrypoint.sh && \
-    echo 'if [ $retry_count -eq $max_retries ]; then' >> /entrypoint.sh && \
-    echo '    echo "❌ Failed to connect to Kafka Connect API after $max_retries attempts"' >> /entrypoint.sh && \
-    echo '    exit 1' >> /entrypoint.sh && \
-    echo 'fi' >> /entrypoint.sh && \
     echo '' >> /entrypoint.sh && \
     echo '# Initialize Terraform with remote state if MinIO vars are set' >> /entrypoint.sh && \
     echo 'if [ -n "$TF_VAR_minio_url" ] && [ -n "$TF_VAR_minio_access_key" ] && [ -n "$TF_VAR_minio_secret_key" ]; then' >> /entrypoint.sh && \
