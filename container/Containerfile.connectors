@@ -17,9 +17,6 @@ COPY connectors/ .
 COPY init-terraform.sh /terraform/init-terraform.sh
 RUN chmod +x /terraform/init-terraform.sh
 
-# Initialize Terraform
-RUN terraform init
-
 # Create entrypoint script
 RUN echo '#!/bin/sh' > /entrypoint.sh && \
     echo 'set -e' >> /entrypoint.sh && \
