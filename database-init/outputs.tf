@@ -1,11 +1,6 @@
-output "auth_service_database_name" {
-  description = "Name of the auth service database"
-  value       = postgresql_database.auth_service.name
-}
-
-output "posts_service_database_name" {
-  description = "Name of the posts service database"
-  value       = postgresql_database.posts_service.name
+output "database_names" {
+  description = "Names of all service databases"
+  value       = { for k, v in postgresql_database.services : k => v.name }
 }
 
 output "debezium_user" {
