@@ -1,0 +1,62 @@
+# Kafka Connectors Dockerfile
+FROM hashicorp/terraform:1.7
+
+# Install curl for testing Kafka Connect API
+RUN apk add --no-cache curl jq
+
+# Set working directory
+WORKDIR /terraform
+
+# Copy Terraform configuration files from connectors directory
+COPY connectors/ .
+
+# Initialize Terraform
+RUN terraform init
+
+# Create entrypoint script
+RUN echo '#!/bin/sh' > /entrypoint.sh && \
+    echo 'set -e' >> /entrypoint.sh && \
+    echo 'echo "🚀 Starting Kafka Connectors Deployment"' >> /entrypoint.sh && \
+    echo '' >> /entrypoint.sh && \
+    echo '# Validate required environment variables' >> /entrypoint.sh && \
+    echo 'required_vars="TF_VAR_postgres_host TF_VAR_debezium_user TF_VAR_debezium_pass"' >> /entrypoint.sh && \
+    echo 'for var in $required_vars; do' >> /entrypoint.sh && \
+    echo '    if [ -z "$(eval echo \$$var)" ]; then' >> /entrypoint.sh && \
+    echo '        echo "❌ Error: Environment variable $var is not set"' >> /entrypoint.sh && \
+    echo '        exit 1' >> /entrypoint.sh && \
+    echo '    fi' >> /entrypoint.sh && \
+    echo 'done' >> /entrypoint.sh && \
+    echo 'echo "✅ Environment variables validated"' >> /entrypoint.sh && \
+    echo '' >> /entrypoint.sh && \
+    echo '# Test Kafka Connect API' >> /entrypoint.sh && \
+    echo 'echo "🔍 Testing Kafka Connect API..."' >> /entrypoint.sh && \
+    echo 'max_retries=30' >> /entrypoint.sh && \
+    echo 'retry_count=0' >> /entrypoint.sh && \
+    echo 'while [ $retry_count -lt $max_retries ]; do' >> /entrypoint.sh && \
+    echo '    if curl -s -f http://kafka-connect:8083/ > /dev/null 2>&1; then' >> /entrypoint.sh && \
+    echo '        echo "✅ Kafka Connect API is accessible"' >> /entrypoint.sh && \
+    echo '        break' >> /entrypoint.sh && \
+    echo '    else' >> /entrypoint.sh && \
+    echo '        echo "⏳ Waiting for Kafka Connect API... (attempt $((retry_count + 1))/$max_retries)"' >> /entrypoint.sh && \
+    echo '        sleep 10' >> /entrypoint.sh && \
+    echo '        retry_count=$((retry_count + 1))' >> /entrypoint.sh && \
+    echo '    fi' >> /entrypoint.sh && \
+    echo 'done' >> /entrypoint.sh && \
+    echo '' >> /entrypoint.sh && \
+    echo 'if [ $retry_count -eq $max_retries ]; then' >> /entrypoint.sh && \
+    echo '    echo "❌ Failed to connect to Kafka Connect API after $max_retries attempts"' >> /entrypoint.sh && \
+    echo '    exit 1' >> /entrypoint.sh && \
+    echo 'fi' >> /entrypoint.sh && \
+    echo '' >> /entrypoint.sh && \
+    echo '# Plan and apply Terraform' >> /entrypoint.sh && \
+    echo 'echo "📊 Planning Kafka connectors deployment..."' >> /entrypoint.sh && \
+    echo 'terraform plan -out=connectors.tfplan' >> /entrypoint.sh && \
+    echo '' >> /entrypoint.sh && \
+    echo 'echo "🚀 Applying Kafka connectors deployment..."' >> /entrypoint.sh && \
+    echo 'terraform apply connectors.tfplan' >> /entrypoint.sh && \
+    echo '' >> /entrypoint.sh && \
+    echo 'echo "✅ Kafka connectors deployment completed successfully!"' >> /entrypoint.sh && \
+    chmod +x /entrypoint.sh
+
+# Set entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
