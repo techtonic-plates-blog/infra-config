@@ -7,8 +7,15 @@ RUN apk add --no-cache postgresql-client
 # Set working directory
 WORKDIR /terraform
 
+# Set project identifier for state management
+ENV TERRAFORM_PROJECT=database-init
+
 # Copy Terraform configuration files from database-init directory
 COPY database-init/ .
+
+# Copy the init script
+COPY init-terraform.sh /terraform/init-terraform.sh
+RUN chmod +x /terraform/init-terraform.sh
 
 # Initialize Terraform
 RUN terraform init
@@ -32,6 +39,14 @@ RUN echo '#!/bin/sh' > /entrypoint.sh && \
     echo 'echo "🔍 Testing PostgreSQL connection..."' >> /entrypoint.sh && \
     echo 'PGPASSWORD=$TF_VAR_postgres_password psql -h $TF_VAR_postgres_host -U postgres -d postgres -c "SELECT version();" > /dev/null' >> /entrypoint.sh && \
     echo 'echo "✅ PostgreSQL connection successful"' >> /entrypoint.sh && \
+    echo '' >> /entrypoint.sh && \
+    echo '# Initialize Terraform with remote state if MinIO vars are set' >> /entrypoint.sh && \
+    echo 'if [ -n "$TF_VAR_minio_url" ] && [ -n "$TF_VAR_minio_access_key" ] && [ -n "$TF_VAR_minio_secret_key" ]; then' >> /entrypoint.sh && \
+    echo '    echo "🔧 Initializing Terraform with remote state..."' >> /entrypoint.sh && \
+    echo '    ./init-terraform.sh' >> /entrypoint.sh && \
+    echo 'else' >> /entrypoint.sh && \
+    echo '    echo "⚠️  MinIO variables not set, using local state"' >> /entrypoint.sh && \
+    echo 'fi' >> /entrypoint.sh && \
     echo '' >> /entrypoint.sh && \
     echo '# Plan and apply Terraform' >> /entrypoint.sh && \
     echo 'echo "📊 Planning database initialization..."' >> /entrypoint.sh && \

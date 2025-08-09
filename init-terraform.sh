@@ -10,13 +10,14 @@ fi
 : "${TF_VAR_minio_url:?TF_VAR_minio_url not set}"
 : "${TF_VAR_minio_access_key:?TF_VAR_minio_access_key not set}"
 : "${TF_VAR_minio_secret_key:?TF_VAR_minio_secret_key not set}"
+: "${TERRAFORM_PROJECT:?TERRAFORM_PROJECT not set (should be 'database-init' or 'connectors')}"
 
 cat > backend.hcl <<EOF
 bucket = "tf-remote-state"
 endpoints = { s3 = "${TF_VAR_minio_url}" }
 access_key = "${TF_VAR_minio_access_key}"
 secret_key = "${TF_VAR_minio_secret_key}"
-key = "kafka-connectors/terraform-provision.tfstate"
+key = "kafka-migrations/${TERRAFORM_PROJECT}/terraform.tfstate"
 region = "main"
 skip_requesting_account_id = true
 skip_credentials_validation = true
