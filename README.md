@@ -121,3 +121,25 @@ services:
       - TF_VAR_postgres_host=${POSTGRES_HOST}
       # ... rest of environment variables
 ```
+
+## Container Images
+
+The following container images are automatically built and published to GitHub Container Registry:
+
+- **Database Init**: `ghcr.io/techtonic-plates-blog/kafka-migrations-database-init:latest`
+- **Connectors**: `ghcr.io/techtonic-plates-blog/kafka-migrations-connectors:latest`
+
+### Using Pre-built Images
+
+You can use the pre-built images by updating your docker-compose.yaml:
+
+```yaml
+services:
+  database-init:
+    image: ghcr.io/techtonic-plates-blog/kafka-migrations-database-init:latest
+    # ... rest of configuration
+
+  connectors:
+    image: ghcr.io/techtonic-plates-blog/kafka-migrations-connectors:latest
+    # ... rest of configuration
+```
