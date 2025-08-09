@@ -14,12 +14,3 @@ output "debezium_user" {
   sensitive   = true
 }
 
-output "users_publication_name" {
-  description = "Publication name for users table"
-  value       = postgresql_publication.debezium_users_pub.name
-}
-
-output "posts_publication_name" {
-  description = "Publication name for posts table"
-  value       = postgresql_publication.debezium_posts_pub.name
-}

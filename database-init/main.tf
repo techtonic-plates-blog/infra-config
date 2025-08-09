@@ -3,36 +3,37 @@ terraform {
 
   }
 }
-
-# Database initialization for auth_service
 resource "postgresql_database" "auth_service" {
   name  = "auth_service"
   owner = var.postgres_user
 }
 
-# Database initialization for posts_service
 resource "postgresql_database" "posts_service" {
   name  = "posts_service"
   owner = var.postgres_user
 }
 
-# Create debezium user for auth_service
 resource "postgresql_role" "debezium_auth_user" {
-  name     = var.debezium_user
-  login    = true
-  password = var.debezium_pass
+  name                    = var.debezium_user
+  login                   = true
+  password                = var.debezium_pass
+  superuser               = true
+  create_database         = true
+  create_role             = true
+  replication             = true
+  bypass_row_level_security = true
 }
 
-# Grant necessary permissions for debezium on auth_service
-resource "postgresql_grant" "debezium_auth_db_connect" {
+# Grant CONNECT privilege on auth_service database
+resource "postgresql_grant" "debezium_auth_connect" {
   database    = postgresql_database.auth_service.name
   role        = postgresql_role.debezium_auth_user.name
-  schema      = "public"
   object_type = "database"
   privileges  = ["CONNECT"]
 }
 
-resource "postgresql_grant" "debezium_auth_schema_usage" {
+# Grant USAGE on schema and SELECT on all tables in auth_service
+resource "postgresql_grant" "debezium_auth_schema" {
   database    = postgresql_database.auth_service.name
   role        = postgresql_role.debezium_auth_user.name
   schema      = "public"
@@ -40,7 +41,7 @@ resource "postgresql_grant" "debezium_auth_schema_usage" {
   privileges  = ["USAGE"]
 }
 
-resource "postgresql_grant" "debezium_auth_table_select" {
+resource "postgresql_grant" "debezium_auth_tables" {
   database    = postgresql_database.auth_service.name
   role        = postgresql_role.debezium_auth_user.name
   schema      = "public"
@@ -48,23 +49,16 @@ resource "postgresql_grant" "debezium_auth_table_select" {
   privileges  = ["SELECT"]
 }
 
-# Grant replication privileges for debezium
-resource "postgresql_grant" "debezium_replication" {
-  role        = postgresql_role.debezium_auth_user.name
-  object_type = "database"
-  privileges  = ["REPLICATION"]
-}
-
-# Grant necessary permissions for debezium on posts_service
-resource "postgresql_grant" "debezium_posts_db_connect" {
+# Grant CONNECT privilege on posts_service database
+resource "postgresql_grant" "debezium_posts_connect" {
   database    = postgresql_database.posts_service.name
   role        = postgresql_role.debezium_auth_user.name
-  schema      = "public"
   object_type = "database"
   privileges  = ["CONNECT"]
 }
 
-resource "postgresql_grant" "debezium_posts_schema_usage" {
+# Grant USAGE on schema and SELECT on all tables in posts_service
+resource "postgresql_grant" "debezium_posts_schema" {
   database    = postgresql_database.posts_service.name
   role        = postgresql_role.debezium_auth_user.name
   schema      = "public"
@@ -72,102 +66,10 @@ resource "postgresql_grant" "debezium_posts_schema_usage" {
   privileges  = ["USAGE"]
 }
 
-resource "postgresql_grant" "debezium_posts_table_all" {
+resource "postgresql_grant" "debezium_posts_tables" {
   database    = postgresql_database.posts_service.name
   role        = postgresql_role.debezium_auth_user.name
   schema      = "public"
   object_type = "table"
-  privileges  = ["SELECT", "INSERT", "UPDATE", "DELETE"]
-}
-
-# Create users table in auth_service
-resource "postgresql_table" "users" {
-  database = postgresql_database.auth_service.name
-  schema   = "public"
-  name     = "users"
-
-  columns = [
-    {
-      name = "id"
-      type = "SERIAL PRIMARY KEY"
-    },
-    {
-      name = "username"
-      type = "VARCHAR(255) UNIQUE NOT NULL"
-    },
-    {
-      name = "email"
-      type = "VARCHAR(255) UNIQUE NOT NULL"
-    },
-    {
-      name = "created_at"
-      type = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
-    },
-    {
-      name = "updated_at"
-      type = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
-    }
-  ]
-}
-
-# Create posts table in posts_service
-resource "postgresql_table" "posts" {
-  database = postgresql_database.posts_service.name
-  schema   = "public"
-  name     = "posts"
-
-  columns = [
-    {
-      name = "id"
-      type = "SERIAL PRIMARY KEY"
-    },
-    {
-      name = "user_id"
-      type = "INTEGER NOT NULL"
-    },
-    {
-      name = "title"
-      type = "VARCHAR(255) NOT NULL"
-    },
-    {
-      name = "content"
-      type = "TEXT"
-    },
-    {
-      name = "created_at"
-      type = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
-    },
-    {
-      name = "updated_at"
-      type = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
-    }
-  ]
-}
-
-# Create users table in posts_service (for sink connector)
-resource "postgresql_table" "users_sink" {
-  database = postgresql_database.posts_service.name
-  schema   = "public"
-  name     = "users"
-
-  columns = [
-    {
-      name = "id"
-      type = "INTEGER PRIMARY KEY"
-    }
-  ]
-}
-
-# Create replication slot and publication for auth_service
-resource "postgresql_publication" "debezium_users_pub" {
-  database = postgresql_database.auth_service.name
-  name     = "debezium_users_pub"
-  tables   = ["public.users"]
-}
-
-# Create replication slot and publication for posts_service
-resource "postgresql_publication" "debezium_posts_pub" {
-  database = postgresql_database.posts_service.name
-  name     = "debezium_posts_pub"
-  tables   = ["public.posts"]
+  privileges  = ["SELECT"]
 }
