@@ -19,32 +19,19 @@ RUN echo '#!/bin/sh' > /entrypoint.sh && \
     echo 'set -e' >> /entrypoint.sh && \
     echo 'echo "🚀 Starting Kafka Connectors Deployment"' >> /entrypoint.sh && \
     echo '' >> /entrypoint.sh && \
-    echo '# Validate required environment variables' >> /entrypoint.sh && \
-    echo 'required_vars="TF_VAR_postgres_host TF_VAR_debezium_user TF_VAR_debezium_pass"' >> /entrypoint.sh && \
-    echo 'for var in $required_vars; do' >> /entrypoint.sh && \
-    echo '    if [ -z "$(eval echo \$$var)" ]; then' >> /entrypoint.sh && \
-    echo '        echo "❌ Error: Environment variable $var is not set"' >> /entrypoint.sh && \
-    echo '        exit 1' >> /entrypoint.sh && \
-    echo '    fi' >> /entrypoint.sh && \
-    echo 'done' >> /entrypoint.sh && \
-    echo 'echo "✅ Environment variables validated"' >> /entrypoint.sh && \
+    echo '# 1. Initialize Terraform backend' >> /entrypoint.sh && \
+    echo 'echo "🔧 Initializing Terraform backend..."' >> /entrypoint.sh && \
+    echo './init-terraform.sh' >> /entrypoint.sh && \
     echo '' >> /entrypoint.sh && \
-    echo '# Initialize Terraform with remote state if MinIO vars are set' >> /entrypoint.sh && \
-    echo 'if [ -n "$TF_VAR_minio_url" ] && [ -n "$TF_VAR_minio_access_key" ] && [ -n "$TF_VAR_minio_secret_key" ]; then' >> /entrypoint.sh && \
-    echo '    echo "🔧 Initializing Terraform with remote state..."' >> /entrypoint.sh && \
-    echo '    ./init-terraform.sh' >> /entrypoint.sh && \
-    echo 'else' >> /entrypoint.sh && \
-    echo '    echo "⚠️  MinIO variables not set, using local state"' >> /entrypoint.sh && \
-    echo 'fi' >> /entrypoint.sh && \
-    echo '' >> /entrypoint.sh && \
-    echo '# Plan and apply Terraform' >> /entrypoint.sh && \
-    echo 'echo "📊 Planning Kafka connectors deployment..."' >> /entrypoint.sh && \
+    echo '# 2. Plan the migration' >> /entrypoint.sh && \
+    echo 'echo "📊 Planning connectors deployment..."' >> /entrypoint.sh && \
     echo 'terraform plan -out=connectors.tfplan' >> /entrypoint.sh && \
     echo '' >> /entrypoint.sh && \
-    echo 'echo "🚀 Applying Kafka connectors deployment..."' >> /entrypoint.sh && \
+    echo '# 3. Apply the changes' >> /entrypoint.sh && \
+    echo 'echo "🚀 Applying connectors deployment..."' >> /entrypoint.sh && \
     echo 'terraform apply connectors.tfplan' >> /entrypoint.sh && \
     echo '' >> /entrypoint.sh && \
-    echo 'echo "✅ Kafka connectors deployment completed successfully!"' >> /entrypoint.sh && \
+    echo 'echo "✅ Connectors deployment completed successfully!"' >> /entrypoint.sh && \
     chmod +x /entrypoint.sh
 
 # Set entrypoint
