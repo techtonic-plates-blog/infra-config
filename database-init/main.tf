@@ -5,7 +5,7 @@ terraform {
 }
 
 locals {
-  databases = ["auth_service", "posts_service"]
+  databases = ["auth_service", "posts_service", "assets_service"]
 }
 
 resource "postgresql_database" "services" {
