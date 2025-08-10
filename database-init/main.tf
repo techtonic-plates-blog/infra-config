@@ -14,22 +14,11 @@ resource "postgresql_database" "services" {
   owner    = var.postgres_user
 }
 
-resource "postgresql_role" "debezium_auth_user" {
-  name                    = var.debezium_user
-  login                   = true
-  password                = var.debezium_pass
-  superuser               = true
-  create_database         = true
-  create_role             = true
-  replication             = true
-  bypass_row_level_security = true
-}
-
 # Grant CONNECT privilege on all databases
 resource "postgresql_grant" "debezium_connect" {
   for_each    = postgresql_database.services
   database    = each.value.name
-  role        = postgresql_role.debezium_auth_user.name
+  role        = var.debezium_user
   object_type = "database"
   privileges  = ["CONNECT"]
 }
@@ -38,7 +27,7 @@ resource "postgresql_grant" "debezium_connect" {
 resource "postgresql_grant" "debezium_schema" {
   for_each    = postgresql_database.services
   database    = each.value.name
-  role        = postgresql_role.debezium_auth_user.name
+  role        = var.debezium_user
   schema      = "public"
   object_type = "schema"
   privileges  = ["USAGE"]
@@ -48,7 +37,7 @@ resource "postgresql_grant" "debezium_schema" {
 resource "postgresql_grant" "debezium_tables" {
   for_each    = postgresql_database.services
   database    = each.value.name
-  role        = postgresql_role.debezium_auth_user.name
+  role        = var.debezium_user
   schema      = "public"
   object_type = "table"
   privileges  = ["SELECT"]
