@@ -16,15 +16,3 @@ variable "postgres_password" {
   sensitive   = true
   description = "PostgreSQL admin password. From environment: TF_VAR_postgres_password"
 }
-
-variable "debezium_user" {
-  type        = string
-  sensitive   = true
-  description = "Debezium user for replication"
-}
-
-variable "debezium_pass" {
-  type        = string
-  sensitive   = true
-  description = "Debezium user password"
-}
