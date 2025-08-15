@@ -41,6 +41,25 @@ resource "kafka-connect_connector" "posts-service-users-sink" {
   }
 }
 
+resource "kafka-connect_connector" "collections-service-users-sink" {
+  name   = "collections-service-users-sink"
+  config = {
+    "name"                = "collections-service-users-sink"
+    "connector.class"     = "io.confluent.connect.jdbc.JdbcSinkConnector"
+    "connection.url"      = "jdbc:postgresql://${var.postgres_host}:5432/collections_service?stringtype=unspecified"
+    "connection.user"     = var.debezium_user
+    "connection.password" = var.debezium_pass
+    "topics"              = "users.public.users"
+    "auto.create"         = "false"
+    "insert.mode"         = "upsert"
+    "pk.mode"             = "record_key"
+    "pk.fields"           = "id"
+    "table.name.format"   = "users"
+    "fields.whitelist"    = "id"
+    "delete.enabled"      = "true"
+  }
+}
+
 resource "kafka-connect_connector" "posts-service-posts-source" {
   name   = "posts-service-posts-source"
   config = {
